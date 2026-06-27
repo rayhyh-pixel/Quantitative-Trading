@@ -745,6 +745,155 @@
             cursor: default;
         }
 
+        /* K-Line Modal */
+        .kline-modal .modal {
+            max-width: 900px;
+        }
+
+        .kline-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .kline-stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kline-stock-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .kline-stock-code {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .kline-price-info {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .kline-current-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .kline-price-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .kline-price-change.up {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .kline-price-change.down {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--accent-red);
+        }
+
+        .kline-indicators {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .kline-indicator {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kline-indicator:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .kline-indicator.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .kline-chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        .kline-chart-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .kline-tab {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kline-tab:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .kline-tab.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .kline-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .kline-info-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .kline-info-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .kline-info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
         /* Chart Container */
         .chart-container {
             position: relative;
@@ -1771,6 +1920,69 @@
         <span class="toast-message" id="toastMessage">操作成功</span>
     </div>
 
+    <!-- K-Line Modal -->
+    <div class="modal-overlay kline-modal" id="klineModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">个股详情</h3>
+                <button class="modal-close" onclick="closeKlineModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="kline-header">
+                    <div class="kline-stock-info">
+                        <span class="kline-stock-name" id="klineStockName">贵州茅台</span>
+                        <span class="kline-stock-code" id="klineStockCode">600519</span>
+                    </div>
+                    <div class="kline-price-info">
+                        <span class="kline-current-price" id="klinePrice">1688.00</span>
+                        <span class="kline-price-change up" id="klineChange">+2.35 (+0.14%)</span>
+                    </div>
+                </div>
+
+                <div class="kline-chart-tabs">
+                    <button class="kline-tab active" onclick="switchKlinePeriod('day')">日K</button>
+                    <button class="kline-tab" onclick="switchKlinePeriod('week')">周K</button>
+                    <button class="kline-tab" onclick="switchKlinePeriod('month')">月K</button>
+                </div>
+
+                <div class="kline-indicators">
+                    <button class="kline-indicator active" onclick="toggleKlineIndicator('ma')">MA均线</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('volume')">成交量</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('macd')">MACD</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('kdj')">KDJ</button>
+                </div>
+
+                <div class="kline-chart-container">
+                    <canvas id="klineChart"></canvas>
+                </div>
+
+                <div class="kline-info-grid">
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">开盘</div>
+                        <div class="kline-info-value" id="klineOpen">1685.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">最高</div>
+                        <div class="kline-info-value" id="klineHigh">1695.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">最低</div>
+                        <div class="kline-info-value" id="klineLow">1680.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">成交量</div>
+                        <div class="kline-info-value" id="klineVolume">12.5万</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Stock Data
         let stocks = [
@@ -1799,6 +2011,12 @@
         // Watchlist Data
         let watchlist = [];
         let watchlistResults = {};
+
+        // K-Line Data
+        let klineChart = null;
+        let currentKlineStock = null;
+        let currentKlinePeriod = 'day';
+        let klineIndicators = { ma: true, volume: false, macd: false, kdj: false };
 
         // Trading Signals
         let signals = [
@@ -2046,9 +2264,269 @@
         function selectStock(code) {
             const stock = stocks.find(s => s.code === code);
             if (stock) {
-                showToast(`${stock.name} (${stock.code}) 已选中`, 'success');
-                updatePriceChart(stock);
+                openKlineModal(stock);
             }
+        }
+
+        // Open K-Line Modal
+        function openKlineModal(stock) {
+            currentKlineStock = stock;
+
+            // Update header info
+            document.getElementById('klineStockName').textContent = stock.name;
+            document.getElementById('klineStockCode').textContent = stock.code;
+            document.getElementById('klinePrice').textContent = stock.price.toFixed(2);
+
+            const changeEl = document.getElementById('klineChange');
+            changeEl.textContent = `${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%)`;
+            changeEl.className = `kline-price-change ${stock.change >= 0 ? 'up' : 'down'}`;
+
+            // Generate random OHLCV data
+            const basePrice = stock.price;
+            const open = basePrice * (0.98 + Math.random() * 0.04);
+            const high = basePrice * (1.00 + Math.random() * 0.05);
+            const low = basePrice * (0.95 + Math.random() * 0.03);
+            const volume = (Math.random() * 100 + 10).toFixed(1);
+
+            document.getElementById('klineOpen').textContent = open.toFixed(2);
+            document.getElementById('klineHigh').textContent = high.toFixed(2);
+            document.getElementById('klineLow').textContent = low.toFixed(2);
+            document.getElementById('klineVolume').textContent = volume + '万';
+
+            // Initialize or update chart
+            initKlineChart(stock);
+
+            // Show modal
+            document.getElementById('klineModal').classList.add('show');
+        }
+
+        // Close K-Line Modal
+        function closeKlineModal() {
+            document.getElementById('klineModal').classList.remove('show');
+        }
+
+        // Switch K-Line Period
+        function switchKlinePeriod(period) {
+            currentKlinePeriod = period;
+
+            // Update tab styles
+            document.querySelectorAll('.kline-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Regenerate chart data
+            if (currentKlineStock) {
+                initKlineChart(currentKlineStock);
+            }
+        }
+
+        // Toggle K-Line Indicator
+        function toggleKlineIndicator(indicator) {
+            klineIndicators[indicator] = !klineIndicators[indicator];
+
+            // Update button styles
+            document.querySelectorAll('.kline-indicator').forEach(btn => {
+                if (btn.textContent.includes(indicator === 'ma' ? 'MA' : indicator === 'volume' ? '成交量' : indicator === 'macd' ? 'MACD' : 'KDJ')) {
+                    btn.classList.toggle('active', klineIndicators[indicator]);
+                }
+            });
+
+            // Re-render chart
+            if (currentKlineStock) {
+                initKlineChart(currentKlineStock);
+            }
+        }
+
+        // Generate K-Line Data
+        function generateKlineData(stock, period) {
+            const data = [];
+            const days = period === 'day' ? 60 : period === 'week' ? 52 : 24;
+            const basePrice = stock.price;
+
+            let currentPrice = basePrice * 0.85;
+
+            for (let i = 0; i < days; i++) {
+                const volatility = 0.03 + Math.random() * 0.04;
+                const trend = Math.random() > 0.48 ? 1 : -1;
+
+                const open = currentPrice;
+                const change = currentPrice * volatility * trend;
+                const close = open + change;
+
+                const highExtra = Math.random() * 0.02 * currentPrice;
+                const lowExtra = Math.random() * 0.02 * currentPrice;
+
+                const high = Math.max(open, close) + highExtra;
+                const low = Math.min(open, close) - lowExtra;
+
+                const volume = 50 + Math.random() * 200;
+
+                data.push({
+                    date: i,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close,
+                    volume: volume
+                });
+
+                currentPrice = close;
+            }
+
+            return data;
+        }
+
+        // Initialize K-Line Chart
+        function initKlineChart(stock) {
+            const ctx = document.getElementById('klineChart').getContext('2d');
+            const klineData = generateKlineData(stock, currentKlinePeriod);
+
+            // Calculate MA
+            const ma5 = calculateMA(klineData, 5);
+            const ma10 = calculateMA(klineData, 10);
+            const ma20 = calculateMA(klineData, 20);
+
+            // Prepare labels
+            const labels = klineData.map((d, i) => {
+                if (currentKlinePeriod === 'day') return `${i}d`;
+                if (currentKlinePeriod === 'week') return `W${i + 1}`;
+                return `M${i + 1}`;
+            });
+
+            // Determine colors
+            const getColor = (i) => klineData[i].close >= klineData[i].open ? '#00d4a1' : '#ff4757';
+
+            // Create candlestick data (high-low line and body)
+            const candleData = klineData.map((d, i) => ({
+                x: i,
+                y: [d.low, d.high, d.open, d.close]
+            }));
+
+            // Destroy existing chart
+            if (klineChart) {
+                klineChart.destroy();
+            }
+
+            const datasets = [];
+
+            // Add candlestick-like bars
+            datasets.push({
+                label: '价格',
+                data: klineData.map(d => d.close),
+                backgroundColor: klineData.map((d, i) => d.close >= d.open ? 'rgba(0, 212, 161, 0.6)' : 'rgba(255, 71, 87, 0.6)'),
+                borderColor: klineData.map((d, i) => d.close >= d.open ? '#00d4a1' : '#ff4757'),
+                borderWidth: 1,
+                barPercentage: 0.7,
+            });
+
+            // Add MA lines if enabled
+            if (klineIndicators.ma) {
+                datasets.push({
+                    label: 'MA5',
+                    data: ma5,
+                    borderColor: '#ff6b6b',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+                datasets.push({
+                    label: 'MA10',
+                    data: ma10,
+                    borderColor: '#ffd93d',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+                datasets.push({
+                    label: 'MA20',
+                    data: ma20,
+                    borderColor: '#6c5ce7',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+            }
+
+            klineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: klineIndicators.ma,
+                            position: 'top',
+                            labels: {
+                                color: '#8b97a8',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a2332',
+                            borderColor: '#2d3a4f',
+                            borderWidth: 1,
+                            titleColor: '#e8edf5',
+                            bodyColor: '#8b97a8',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = klineData[idx];
+                                    return [
+                                        `开盘: ${d.open.toFixed(2)}`,
+                                        `最高: ${d.high.toFixed(2)}`,
+                                        `最低: ${d.low.toFixed(2)}`,
+                                        `收盘: ${d.close.toFixed(2)}`,
+                                        `成交量: ${d.volume.toFixed(1)}万`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778', maxTicksLimit: 10 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778' },
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calculate Moving Average
+        function calculateMA(data, period) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += data[i - j].close;
+                    }
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
         }
 
         // Initialize Price Chart
@@ -2404,6 +2882,13 @@
             if (!e.target.closest('.custom-select')) {
                 document.querySelectorAll('.select-options').forEach(opt => opt.classList.remove('open'));
                 document.querySelectorAll('.select-trigger').forEach(t => t.classList.remove('open'));
+            }
+        });
+
+        // Close K-Line modal when clicking outside
+        document.getElementById('klineModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeKlineModal();
             }
         });
     </script>
