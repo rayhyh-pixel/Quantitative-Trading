@@ -367,7 +367,7 @@
 
         .stock-item {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr auto auto;
             gap: 16px;
             padding: 16px 20px;
             background: var(--bg-secondary);
@@ -425,6 +425,324 @@
         .stock-change.down {
             background: rgba(255, 71, 87, 0.15);
             color: var(--accent-red);
+        }
+
+        /* Watchlist Star Button */
+        .watchlist-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-btn:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .watchlist-btn svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-btn.active svg {
+            color: var(--accent-yellow);
+            fill: var(--accent-yellow);
+        }
+
+        /* Watchlist Panel */
+        .watchlist-panel {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .watchlist-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .watchlist-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .watchlist-empty {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .watchlist-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .watchlist-item .stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .watchlist-item .stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .watchlist-item .stock-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .watchlist-model-select {
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .watchlist-model-select:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        .watchlist-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .watchlist-action-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-action-btn.run {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .watchlist-action-btn.run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .watchlist-action-btn.remove {
+            background: var(--bg-primary);
+            color: var(--accent-red);
+            border: 1px solid var(--border-color);
+        }
+
+        .watchlist-action-btn.remove:hover {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: var(--accent-red);
+        }
+
+        .watchlist-results {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 212, 161, 0.1);
+            border: 1px solid rgba(0, 212, 161, 0.3);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .watchlist-results.show {
+            display: block;
+        }
+
+        .watchlist-result-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .watchlist-result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .watchlist-result-label {
+            color: var(--text-secondary);
+        }
+
+        .watchlist-result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .watchlist-result-value.positive {
+            color: var(--accent-green);
+        }
+
+        .watchlist-result-value.negative {
+            color: var(--accent-red);
+        }
+
+        /* Modal for adding stocks */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-search {
+            margin-bottom: 16px;
+        }
+
+        .modal-stock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-stock-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .modal-stock-item.in-watchlist {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .modal-stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .modal-stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .modal-stock-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .modal-add-btn {
+            padding: 6px 14px;
+            background: var(--accent-yellow);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-add-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .modal-add-btn.added {
+            background: var(--bg-card-hover);
+            color: var(--text-muted);
+            cursor: default;
         }
 
         /* Chart Container */
@@ -1150,6 +1468,22 @@
                     <div class="stock-list" id="stockList">
                         <!-- Stock items will be rendered here -->
                     </div>
+
+                    <!-- Watchlist Panel -->
+                    <div class="watchlist-panel">
+                        <div class="watchlist-header">
+                            <div class="watchlist-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                我的自选股
+                            </div>
+                            <span style="font-size: 12px; color: var(--text-muted);">${watchlist.length} 只</span>
+                        </div>
+                        <div id="watchlistContainer">
+                            <!-- Watchlist items will be rendered here -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1462,6 +1796,10 @@
         let priceChart = null;
         let backtestChart = null;
 
+        // Watchlist Data
+        let watchlist = [];
+        let watchlistResults = {};
+
         // Trading Signals
         let signals = [
             { type: 'buy', stock: '贵州茅台', code: '600519', reason: 'MA5上穿MA20，形成金叉', time: '09:35:22' },
@@ -1475,16 +1813,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderStockList();
             renderSignals();
+            renderWatchlist();
             initPriceChart();
             initBacktestChart();
             initRangeSliders();
             checkMarketStatus();
+            loadWatchlistFromStorage();
         });
 
         // Render Stock List
         function renderStockList() {
             const stockList = document.getElementById('stockList');
-            stockList.innerHTML = filteredStocks.map(stock => `
+            stockList.innerHTML = filteredStocks.map(stock => {
+                const isInWatchlist = watchlist.some(w => w.code === stock.code);
+                return `
                 <div class="stock-item" onclick="selectStock('${stock.code}')">
                     <div class="stock-info">
                         <span class="stock-code">${stock.code}</span>
@@ -1498,8 +1840,13 @@
                     <div style="text-align: right;">
                         <span style="font-size: 11px; color: var(--text-muted);">${stock.market === 'sh' ? '上海' : '深圳'}</span>
                     </div>
+                    <button class="watchlist-btn ${isInWatchlist ? 'active' : ''}" onclick="event.stopPropagation(); toggleWatchlist('${stock.code}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Filter Stocks
@@ -1541,6 +1888,153 @@
                     <div class="signal-time">${signal.time}</div>
                 </div>
             `).join('');
+        }
+
+        // Toggle Watchlist
+        function toggleWatchlist(code) {
+            const stock = stocks.find(s => s.code === code);
+            if (!stock) return;
+
+            const index = watchlist.findIndex(w => w.code === code);
+            if (index > -1) {
+                watchlist.splice(index, 1);
+                showToast(`已从自选股移除 ${stock.name}`, 'success');
+            } else {
+                watchlist.push({ ...stock, model: 'ma-cross' });
+                showToast(`已添加 ${stock.name} 到自选股`, 'success');
+            }
+
+            saveWatchlistToStorage();
+            renderStockList();
+            renderWatchlist();
+        }
+
+        // Render Watchlist
+        function renderWatchlist() {
+            const watchlistPanel = document.getElementById('watchlistPanel');
+            const watchlistContainer = document.getElementById('watchlistContainer');
+
+            if (watchlist.length === 0) {
+                watchlistContainer.innerHTML = `
+                    <div class="watchlist-empty">
+                        <p>暂无自选股</p>
+                        <p style="margin-top: 8px; font-size: 12px;">点击股票旁边的星号添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            watchlistContainer.innerHTML = watchlist.map(item => {
+                const result = watchlistResults[item.code];
+                return `
+                <div class="watchlist-item">
+                    <div class="stock-info">
+                        <span class="stock-code">${item.code}</span>
+                        <span class="stock-name">${item.name}</span>
+                    </div>
+                    <select class="watchlist-model-select" onchange="updateWatchlistModel('${item.code}', this.value)">
+                        <option value="ma-cross" ${item.model === 'ma-cross' ? 'selected' : ''}>MA Cross</option>
+                        <option value="rsi-rev" ${item.model === 'rsi-rev' ? 'selected' : ''}>RSI Rev</option>
+                        <option value="macd-momentum" ${item.model === 'macd-momentum' ? 'selected' : ''}>MACD Mom</option>
+                        <option value="bollinger-band" ${item.model === 'bollinger-band' ? 'selected' : ''}>Bollinger</option>
+                    </select>
+                    <div class="watchlist-actions">
+                        <button class="watchlist-action-btn run" onclick="runWatchlistAnalysis('${item.code}')">分析</button>
+                        <button class="watchlist-action-btn remove" onclick="toggleWatchlist('${item.code}')">移除</button>
+                    </div>
+                </div>
+                ${result ? `
+                <div class="watchlist-results show" id="result-${item.code}">
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">策略</span>
+                        <span class="watchlist-result-value">${getModelName(result.model)}</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">预期收益</span>
+                        <span class="watchlist-result-value ${result.return >= 0 ? 'positive' : 'negative'}">${result.return >= 0 ? '+' : ''}${result.return.toFixed(1)}%</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">买入信号</span>
+                        <span class="watchlist-result-value ${result.signal === '买入' ? 'positive' : 'negative'}">${result.signal}</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">风险等级</span>
+                        <span class="watchlist-result-value">${result.risk}</span>
+                    </div>
+                </div>
+                ` : ''}
+            `}).join('');
+        }
+
+        // Get Model Name
+        function getModelName(modelCode) {
+            const names = {
+                'ma-cross': 'MA Cross',
+                'rsi-rev': 'RSI Rev',
+                'macd-momentum': 'MACD Mom',
+                'bollinger-band': 'Bollinger'
+            };
+            return names[modelCode] || modelCode;
+        }
+
+        // Update Watchlist Model
+        function updateWatchlistModel(code, model) {
+            const item = watchlist.find(w => w.code === code);
+            if (item) {
+                item.model = model;
+                delete watchlistResults[code];
+                renderWatchlist();
+                saveWatchlistToStorage();
+            }
+        }
+
+        // Run Watchlist Analysis
+        function runWatchlistAnalysis(code) {
+            const item = watchlist.find(w => w.code === code);
+            if (!item) return;
+
+            showToast(`正在分析 ${item.name}...`, 'success');
+
+            // Simulate analysis
+            setTimeout(() => {
+                const modelReturns = {
+                    'ma-cross': 5 + Math.random() * 15,
+                    'rsi-rev': 3 + Math.random() * 12,
+                    'macd-momentum': 8 + Math.random() * 18,
+                    'bollinger-band': 4 + Math.random() * 14
+                };
+
+                const risks = ['低', '中', '高'];
+                const signals = ['买入', '持有', '卖出'];
+
+                watchlistResults[code] = {
+                    model: item.model,
+                    return: modelReturns[item.model],
+                    signal: signals[Math.floor(Math.random() * 3)],
+                    risk: risks[Math.floor(Math.random() * 3)]
+                };
+
+                renderWatchlist();
+                showToast(`${item.name} 分析完成`, 'success');
+            }, 1500);
+        }
+
+        // Save Watchlist to Storage
+        function saveWatchlistToStorage() {
+            localStorage.setItem('quantWatchlist', JSON.stringify(watchlist));
+        }
+
+        // Load Watchlist from Storage
+        function loadWatchlistFromStorage() {
+            const saved = localStorage.getItem('quantWatchlist');
+            if (saved) {
+                try {
+                    watchlist = JSON.parse(saved);
+                    renderWatchlist();
+                } catch (e) {
+                    console.error('Failed to load watchlist:', e);
+                }
+            }
         }
 
         // Select Stock
