@@ -1478,7 +1478,7 @@
                                 </svg>
                                 我的自选股
                             </div>
-                            <span style="font-size: 12px; color: var(--text-muted);">${watchlist.length} 只</span>
+                            <span style="font-size: 12px; color: var(--text-muted);" id="watchlistCount">0 只</span>
                         </div>
                         <div id="watchlistContainer">
                             <!-- Watchlist items will be rendered here -->
@@ -1813,12 +1813,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderStockList();
             renderSignals();
-            renderWatchlist();
             initPriceChart();
             initBacktestChart();
             initRangeSliders();
             checkMarketStatus();
             loadWatchlistFromStorage();
+            renderWatchlist();
         });
 
         // Render Stock List
@@ -1911,8 +1911,13 @@
 
         // Render Watchlist
         function renderWatchlist() {
-            const watchlistPanel = document.getElementById('watchlistPanel');
             const watchlistContainer = document.getElementById('watchlistContainer');
+            const watchlistCount = document.getElementById('watchlistCount');
+
+            // Update count
+            if (watchlistCount) {
+                watchlistCount.textContent = `${watchlist.length} 只`;
+            }
 
             if (watchlist.length === 0) {
                 watchlistContainer.innerHTML = `
