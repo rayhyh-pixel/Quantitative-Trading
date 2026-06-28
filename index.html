@@ -894,6 +894,209 @@
             font-weight: 600;
         }
 
+        /* Transaction Details */
+        .tx-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tx-summary-item {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .tx-summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .tx-summary-value.green {
+            color: var(--accent-green);
+        }
+
+        .tx-summary-value.red {
+            color: var(--accent-red);
+        }
+
+        .tx-summary-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .tx-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tx-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tx-tab:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .tx-tab.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .tx-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .tx-item {
+            padding: 14px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent-blue);
+            transition: all 0.2s ease;
+        }
+
+        .tx-item.buy {
+            border-left-color: var(--accent-green);
+        }
+
+        .tx-item.sell {
+            border-left-color: var(--accent-red);
+        }
+
+        .tx-item:hover {
+            background: var(--bg-card-hover);
+            transform: translateX(2px);
+        }
+
+        .tx-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .tx-item-stock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tx-type-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-type-badge.buy {
+            background: rgba(0, 212, 161, 0.2);
+            color: var(--accent-green);
+        }
+
+        .tx-type-badge.sell {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+        }
+
+        .tx-stock-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .tx-stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .tx-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .tx-item-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .tx-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tx-detail-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-detail-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tx-detail-value.green {
+            color: var(--accent-green);
+        }
+
+        .tx-detail-value.red {
+            color: var(--accent-red);
+        }
+
+        .tx-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .tx-status.completed {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .tx-status.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .tx-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
         /* Chart Container */
         .chart-container {
             position: relative;
@@ -1907,6 +2110,39 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Transaction Details -->
+            <div class="card fade-in stagger-4" id="txCard">
+                <div class="card-header">
+                    <h2 class="card-title">交易明细</h2>
+                    <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 笔</span>
+                </div>
+                <div class="card-body">
+                    <div class="tx-summary">
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value green" id="txTotalProfit">+12,580</div>
+                            <div class="tx-summary-label">累计盈亏</div>
+                        </div>
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value" id="txWinRate">62%</div>
+                            <div class="tx-summary-label">胜率</div>
+                        </div>
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value" id="txTotalCount">18</div>
+                            <div class="tx-summary-label">总交易</div>
+                        </div>
+                    </div>
+
+                    <div class="tx-tabs">
+                        <button class="tx-tab active" onclick="switchTxTab('all')">全部</button>
+                        <button class="tx-tab" onclick="switchTxTab('buy')">买入</button>
+                        <button class="tx-tab" onclick="switchTxTab('sell')">卖出</button>
+                    </div>
+
+                    <div class="tx-list" id="txList">
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -2018,6 +2254,30 @@
         let currentKlinePeriod = 'day';
         let klineIndicators = { ma: true, volume: false, macd: false, kdj: false };
 
+        // Transaction Data
+        let transactions = [
+            { id: 1, type: 'buy', code: '600519', name: '贵州茅台', price: 1650.00, quantity: 100, amount: 165000, fee: 8.25, time: '2026-06-20 09:35:22', status: 'completed', profit: null },
+            { id: 2, type: 'sell', code: '000858', name: '五粮液', price: 148.50, quantity: 500, amount: 74250, fee: 7.43, time: '2026-06-20 10:15:08', status: 'completed', profit: 2850.00 },
+            { id: 3, type: 'buy', code: '600036', name: '招商银行', price: 34.20, quantity: 2000, amount: 68400, fee: 6.84, time: '2026-06-20 11:02:45', status: 'completed', profit: null },
+            { id: 4, type: 'buy', code: '600276', name: '恒瑞医药', price: 50.80, quantity: 300, amount: 15240, fee: 5.00, time: '2026-06-21 09:45:30', status: 'completed', profit: null },
+            { id: 5, type: 'sell', code: '000333', name: '美的集团', price: 60.50, quantity: 200, amount: 12100, fee: 5.00, time: '2026-06-21 10:28:12', status: 'completed', profit: -1280.50 },
+            { id: 6, type: 'buy', code: '002594', name: '比亚迪', price: 265.00, quantity: 50, amount: 13250, fee: 6.63, time: '2026-06-21 13:45:00', status: 'completed', profit: null },
+            { id: 7, type: 'sell', code: '600519', name: '贵州茅台', price: 1695.00, quantity: 100, amount: 169500, fee: 16.95, time: '2026-06-22 09:58:15', status: 'completed', profit: 4474.80 },
+            { id: 8, type: 'buy', code: '600887', name: '伊利股份', price: 25.50, quantity: 1000, amount: 25500, fee: 5.10, time: '2026-06-22 10:30:00', status: 'completed', profit: null },
+            { id: 9, type: 'buy', code: '000725', name: '京东方A', price: 3.65, quantity: 5000, amount: 18250, fee: 5.00, time: '2026-06-23 09:42:33', status: 'completed', profit: null },
+            { id: 10, type: 'sell', code: '600276', name: '恒瑞医药', price: 53.20, quantity: 300, amount: 15960, fee: 5.00, time: '2026-06-23 10:55:48', status: 'completed', profit: 705.00 },
+            { id: 11, type: 'buy', code: '601888', name: '中国中免', price: 70.00, quantity: 200, amount: 14000, fee: 7.00, time: '2026-06-24 09:38:20', status: 'completed', profit: null },
+            { id: 12, type: 'sell', code: '600887', name: '伊利股份', price: 27.10, quantity: 1000, amount: 27100, fee: 5.42, time: '2026-06-24 11:20:05', status: 'completed', profit: 1589.48 },
+            { id: 13, type: 'buy', code: '600030', name: '中信证券', price: 20.80, quantity: 1000, amount: 20800, fee: 6.24, time: '2026-06-25 09:50:10', status: 'completed', profit: null },
+            { id: 14, type: 'sell', code: '002594', name: '比亚迪', price: 272.50, quantity: 50, amount: 13625, fee: 6.81, time: '2026-06-25 10:45:30', status: 'completed', profit: 361.56 },
+            { id: 15, type: 'buy', code: '600009', name: '上海机场', price: 56.50, quantity: 300, amount: 16950, fee: 5.00, time: '2026-06-26 09:30:00', status: 'completed', profit: null },
+            { id: 16, type: 'sell', code: '000725', name: '京东方A', price: 3.78, quantity: 5000, amount: 18900, fee: 5.00, time: '2026-06-26 10:18:42', status: 'completed', profit: 640.00 },
+            { id: 17, type: 'buy', code: '000001', name: '平安银行', price: 11.00, quantity: 2000, amount: 22000, fee: 5.00, time: '2026-06-27 09:55:20', status: 'completed', profit: null },
+            { id: 18, type: 'sell', code: '600036', name: '招商银行', price: 35.80, quantity: 2000, amount: 71600, fee: 10.74, time: '2026-06-27 10:35:15', status: 'completed', profit: 3172.42 },
+        ];
+
+        let currentTxTab = 'all';
+
         // Trading Signals
         let signals = [
             { type: 'buy', stock: '贵州茅台', code: '600519', reason: 'MA5上穿MA20，形成金叉', time: '09:35:22' },
@@ -2037,6 +2297,7 @@
             checkMarketStatus();
             loadWatchlistFromStorage();
             renderWatchlist();
+            renderTransactions();
         });
 
         // Render Stock List
@@ -2258,6 +2519,93 @@
                     console.error('Failed to load watchlist:', e);
                 }
             }
+        }
+
+        // Render Transaction List
+        function renderTransactions() {
+            const txList = document.getElementById('txList');
+            const txCount = document.getElementById('txCount');
+
+            let filtered = transactions;
+            if (currentTxTab === 'buy') {
+                filtered = transactions.filter(t => t.type === 'buy');
+            } else if (currentTxTab === 'sell') {
+                filtered = transactions.filter(t => t.type === 'sell');
+            }
+
+            txCount.textContent = `${filtered.length} 笔`;
+            document.getElementById('txTotalCount').textContent = transactions.length;
+
+            // Calculate summary
+            const sellTxs = transactions.filter(t => t.type === 'sell');
+            const totalProfit = sellTxs.reduce((sum, t) => sum + (t.profit || 0), 0);
+            const winCount = sellTxs.filter(t => t.profit > 0).length;
+            const winRate = sellTxs.length > 0 ? (winCount / sellTxs.length * 100).toFixed(0) : 0;
+
+            const profitEl = document.getElementById('txTotalProfit');
+            profitEl.textContent = (totalProfit >= 0 ? '+' : '') + formatAmount(totalProfit);
+            profitEl.className = `tx-summary-value ${totalProfit >= 0 ? 'green' : 'red'}`;
+
+            document.getElementById('txWinRate').textContent = winRate + '%';
+
+            if (filtered.length === 0) {
+                txList.innerHTML = `<div class="tx-empty">暂无交易记录</div>`;
+                return;
+            }
+
+            txList.innerHTML = filtered.map(tx => `
+                <div class="tx-item ${tx.type}">
+                    <div class="tx-item-header">
+                        <div class="tx-item-stock">
+                            <span class="tx-type-badge ${tx.type}">${tx.type === 'buy' ? '买入' : '卖出'}</span>
+                            <div>
+                                <div class="tx-stock-name">${tx.name}</div>
+                                <div class="tx-stock-code">${tx.code}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="tx-status ${tx.status}">${tx.status === 'completed' ? '已成交' : '待成交'}</span>
+                            <div class="tx-time">${tx.time}</div>
+                        </div>
+                    </div>
+                    <div class="tx-item-details">
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">成交价</span>
+                            <span class="tx-detail-value">${tx.price.toFixed(2)}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">数量</span>
+                            <span class="tx-detail-value">${tx.quantity}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">金额</span>
+                            <span class="tx-detail-value">${formatAmount(tx.amount)}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">${tx.type === 'sell' ? '盈亏' : '手续费'}</span>
+                            <span class="tx-detail-value ${tx.type === 'sell' ? (tx.profit >= 0 ? 'green' : 'red') : ''}">
+                                ${tx.type === 'sell' ? (tx.profit >= 0 ? '+' : '') + formatAmount(tx.profit) : tx.fee.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatAmount(amount) {
+            return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Switch Transaction Tab
+        function switchTxTab(tab) {
+            currentTxTab = tab;
+
+            document.querySelectorAll('.tx-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderTransactions();
         }
 
         // Select Stock
