@@ -1,0 +1,3244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantMaster - 量化交易系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #243044;
+            --border-color: #2d3a4f;
+            --text-primary: #e8edf5;
+            --text-secondary: #8b97a8;
+            --text-muted: #5c6778;
+            --accent-green: #00d4a1;
+            --accent-red: #ff4757;
+            --accent-blue: #3b82f6;
+            --accent-yellow: #fbbf24;
+            --accent-purple: #a855f7;
+            --glow-green: rgba(0, 212, 161, 0.3);
+            --glow-red: rgba(255, 71, 87, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            z-index: 1000;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: rgba(10, 14, 23, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            background: var(--bg-card);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .market-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.closed {
+            background: var(--text-muted);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .sync-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .sync-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .sync-btn.syncing {
+            animation: syncing 1s infinite;
+        }
+
+        @keyframes syncing {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Main Content */
+        .main {
+            margin-top: 72px;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            min-height: calc(100vh - 72px);
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Market Overview */
+        .market-overview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .market-item {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .market-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+        }
+
+        .market-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .market-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .market-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .market-change.up {
+            color: var(--accent-green);
+        }
+
+        .market-change.down {
+            color: var(--accent-red);
+        }
+
+        /* Stock Search */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Stock List */
+        .stock-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stock-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stock-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .stock-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .stock-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto auto;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-items: center;
+        }
+
+        .stock-item:hover {
+            background: var(--bg-card-hover);
+            transform: translateX(4px);
+        }
+
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stock-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stock-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .stock-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-align: right;
+        }
+
+        .stock-change.up {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .stock-change.down {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--accent-red);
+        }
+
+        /* Watchlist Star Button */
+        .watchlist-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-btn:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .watchlist-btn svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-btn.active svg {
+            color: var(--accent-yellow);
+            fill: var(--accent-yellow);
+        }
+
+        /* Watchlist Panel */
+        .watchlist-panel {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .watchlist-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .watchlist-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .watchlist-empty {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .watchlist-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .watchlist-item .stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .watchlist-item .stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .watchlist-item .stock-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .watchlist-model-select {
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .watchlist-model-select:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        .watchlist-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .watchlist-action-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .watchlist-action-btn.run {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .watchlist-action-btn.run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .watchlist-action-btn.remove {
+            background: var(--bg-primary);
+            color: var(--accent-red);
+            border: 1px solid var(--border-color);
+        }
+
+        .watchlist-action-btn.remove:hover {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: var(--accent-red);
+        }
+
+        .watchlist-results {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 212, 161, 0.1);
+            border: 1px solid rgba(0, 212, 161, 0.3);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .watchlist-results.show {
+            display: block;
+        }
+
+        .watchlist-result-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .watchlist-result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .watchlist-result-label {
+            color: var(--text-secondary);
+        }
+
+        .watchlist-result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .watchlist-result-value.positive {
+            color: var(--accent-green);
+        }
+
+        .watchlist-result-value.negative {
+            color: var(--accent-red);
+        }
+
+        /* Modal for adding stocks */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-search {
+            margin-bottom: 16px;
+        }
+
+        .modal-stock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-stock-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .modal-stock-item.in-watchlist {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .modal-stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .modal-stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .modal-stock-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .modal-add-btn {
+            padding: 6px 14px;
+            background: var(--accent-yellow);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-add-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .modal-add-btn.added {
+            background: var(--bg-card-hover);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        /* K-Line Modal */
+        .kline-modal .modal {
+            max-width: 900px;
+        }
+
+        .kline-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .kline-stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kline-stock-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .kline-stock-code {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .kline-price-info {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .kline-current-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .kline-price-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .kline-price-change.up {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .kline-price-change.down {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--accent-red);
+        }
+
+        .kline-indicators {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .kline-indicator {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kline-indicator:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .kline-indicator.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .kline-chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        .kline-chart-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .kline-tab {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kline-tab:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .kline-tab.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .kline-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .kline-info-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .kline-info-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .kline-info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Transaction Details */
+        .tx-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tx-summary-item {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .tx-summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .tx-summary-value.green {
+            color: var(--accent-green);
+        }
+
+        .tx-summary-value.red {
+            color: var(--accent-red);
+        }
+
+        .tx-summary-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .tx-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tx-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tx-tab:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .tx-tab.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .tx-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .tx-item {
+            padding: 14px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent-blue);
+            transition: all 0.2s ease;
+        }
+
+        .tx-item.buy {
+            border-left-color: var(--accent-green);
+        }
+
+        .tx-item.sell {
+            border-left-color: var(--accent-red);
+        }
+
+        .tx-item:hover {
+            background: var(--bg-card-hover);
+            transform: translateX(2px);
+        }
+
+        .tx-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .tx-item-stock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tx-type-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-type-badge.buy {
+            background: rgba(0, 212, 161, 0.2);
+            color: var(--accent-green);
+        }
+
+        .tx-type-badge.sell {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+        }
+
+        .tx-stock-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .tx-stock-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .tx-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .tx-item-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .tx-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tx-detail-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-detail-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tx-detail-value.green {
+            color: var(--accent-green);
+        }
+
+        .tx-detail-value.red {
+            color: var(--accent-red);
+        }
+
+        .tx-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .tx-status.completed {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .tx-status.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .tx-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Model Config Panel */
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .config-section {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .config-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .config-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .config-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Range Slider */
+        .range-slider {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .range-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .range-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 3px;
+            transition: width 0.1s ease;
+        }
+
+        .range-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px;
+            height: 18px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: grab;
+            transition: transform 0.1s ease;
+        }
+
+        .range-thumb:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* Select Dropdown */
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-trigger {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .select-trigger:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .select-trigger.open {
+            border-color: var(--accent-blue);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-blue);
+            border-top: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            overflow: hidden;
+            display: none;
+            z-index: 10;
+        }
+
+        .select-options.open {
+            display: block;
+        }
+
+        .select-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+
+        .select-option:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .select-option.selected {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+        }
+
+        /* Model Cards */
+        .model-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .model-card {
+            padding: 16px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .model-card:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .model-card.selected {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .model-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .model-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .model-badge.alpha {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .model-badge.beta {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .model-badge.gamma {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .model-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .model-metrics {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .model-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .metric-value.green {
+            color: var(--accent-green);
+        }
+
+        .metric-value.red {
+            color: var(--accent-red);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green), #00b894);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--glow-green);
+        }
+
+        /* Performance Metrics */
+        .perf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .perf-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .perf-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .perf-value.green {
+            color: var(--accent-green);
+        }
+
+        .perf-value.red {
+            color: var(--accent-red);
+        }
+
+        .perf-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Strategy Parameters */
+        .param-group {
+            margin-bottom: 20px;
+        }
+
+        .param-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .param-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .param-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Right Panel */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--bg-card);
+            color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Signal List */
+        .signal-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .signal-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .signal-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .signal-icon.buy {
+            background: rgba(0, 212, 161, 0.15);
+            color: var(--accent-green);
+        }
+
+        .signal-icon.sell {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--accent-red);
+        }
+
+        .signal-info {
+            flex: 1;
+        }
+
+        .signal-stock {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .signal-reason {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .signal-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Backtest Results */
+        .backtest-chart {
+            height: 200px;
+            margin-bottom: 20px;
+        }
+
+        .backtest-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .backtest-stat {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .backtest-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .backtest-stat-value.positive {
+            color: var(--accent-green);
+        }
+
+        .backtest-stat-value.negative {
+            color: var(--accent-red);
+        }
+
+        .backtest-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+        .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--accent-green);
+        }
+
+        .toast.error {
+            border-color: var(--accent-red);
+        }
+
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast.success .toast-icon {
+            background: rgba(0, 212, 161, 0.2);
+            color: var(--accent-green);
+        }
+
+        .toast.error .toast-icon {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+        }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="grid-bg"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">QM</div>
+            <span class="logo-text">QuantMaster</span>
+        </div>
+
+        <nav class="header-nav">
+            <button class="nav-btn active" data-panel="dashboard">仪表盘</button>
+            <button class="nav-btn" data-panel="stocks">股票数据</button>
+            <button class="nav-btn" data-panel="models">模型配置</button>
+            <button class="nav-btn" data-panel="backtest">回测分析</button>
+        </nav>
+
+        <div class="header-right">
+            <div class="market-status">
+                <div class="status-dot" id="marketStatusDot"></div>
+                <span id="marketStatusText">交易时间</span>
+            </div>
+            <button class="sync-btn" id="syncBtn" onclick="syncData()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                    <path d="M16 16h5v5"/>
+                </svg>
+                同步数据
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="left-column">
+            <!-- Market Overview -->
+            <div class="card fade-in stagger-1">
+                <div class="card-header">
+                    <h2 class="card-title">市场概览</h2>
+                    <span style="font-size: 12px; color: var(--text-muted);">实时数据</span>
+                </div>
+                <div class="card-body">
+                    <div class="market-overview">
+                        <div class="market-item">
+                            <div class="market-label">上证指数</div>
+                            <div class="market-value" id="shIndex">3,021.69</div>
+                            <div class="market-change up" id="shChange">+22.34 (+0.75%)</div>
+                        </div>
+                        <div class="market-item">
+                            <div class="market-label">深证成指</div>
+                            <div class="market-value" id="szIndex">9,823.12</div>
+                            <div class="market-change up" id="szChange">+85.56 (+0.88%)</div>
+                        </div>
+                        <div class="market-item">
+                            <div class="market-label">创业板指</div>
+                            <div class="market-value" id="cyIndex">1,834.56</div>
+                            <div class="market-change down" id="cyChange">-12.34 (-0.67%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Data Panel -->
+            <div class="card fade-in stagger-2" id="stocksPanel">
+                <div class="card-header">
+                    <h2 class="card-title">沪深 A 股实时行情</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <select class="custom-select" style="width: 120px;" id="marketFilter" onchange="filterStocks()">
+                            <option value="all">全部市场</option>
+                            <option value="sh">上海</option>
+                            <option value="sz">深圳</option>
+                        </select>
+                        <select class="custom-select" style="width: 120px;" id="sortFilter" onchange="filterStocks()">
+                            <option value="code">代码</option>
+                            <option value="change">涨跌幅</option>
+                            <option value="price">价格</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="search-container">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" class="search-input" placeholder="搜索股票代码或名称..." id="stockSearch" oninput="filterStocks()">
+                    </div>
+                    <div class="stock-list" id="stockList">
+                        <!-- Stock items will be rendered here -->
+                    </div>
+
+                    <!-- Watchlist Panel -->
+                    <div class="watchlist-panel">
+                        <div class="watchlist-header">
+                            <div class="watchlist-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                我的自选股
+                            </div>
+                            <span style="font-size: 12px; color: var(--text-muted);" id="watchlistCount">0 只</span>
+                        </div>
+                        <div id="watchlistContainer">
+                            <!-- Watchlist items will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Chart -->
+            <div class="card fade-in stagger-3">
+                <div class="card-header">
+                    <h2 class="card-title">价格走势</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="setChartRange('1D')">1日</button>
+                        <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="setChartRange('1W')">1周</button>
+                        <button class="btn btn-secondary active" style="padding: 8px 16px; font-size: 12px;" onclick="setChartRange('1M')">1月</button>
+                        <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="setChartRange('3M')">3月</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backtest Panel -->
+            <div class="card fade-in stagger-4" id="backtestPanel" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">回测分析</h2>
+                </div>
+                <div class="card-body">
+                    <div class="backtest-chart">
+                        <canvas id="backtestChart"></canvas>
+                    </div>
+                    <div class="backtest-stats">
+                        <div class="backtest-stat">
+                            <div class="backtest-stat-value positive" id="backtestReturn">+24.5%</div>
+                            <div class="backtest-stat-label">总收益率</div>
+                        </div>
+                        <div class="backtest-stat">
+                            <div class="backtest-stat-value positive" id="backtestSharpe">1.82</div>
+                            <div class="backtest-stat-label">夏普比率</div>
+                        </div>
+                        <div class="backtest-stat">
+                            <div class="backtest-stat-value negative" id="backtestMaxDD">-8.3%</div>
+                            <div class="backtest-stat-label">最大回撤</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <!-- Model Config -->
+            <div class="card fade-in stagger-2" id="modelsPanel" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">量化模型配置</h2>
+                </div>
+                <div class="card-body">
+                    <div class="config-panel">
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5"/>
+                                    <path d="M2 12l10 5 10-5"/>
+                                </svg>
+                                选择策略模型
+                            </div>
+                            <div class="model-grid" id="modelGrid">
+                                <div class="model-card selected" data-model="ma-cross" onclick="selectModel(this)">
+                                    <div class="model-card-header">
+                                        <span class="model-name">MA Cross</span>
+                                        <span class="model-badge alpha">Alpha</span>
+                                    </div>
+                                    <div class="model-desc">双均线交叉策略</div>
+                                    <div class="model-metrics">
+                                        <div class="model-metric">
+                                            <span class="metric-label">收益</span>
+                                            <span class="metric-value green">18.5%</span>
+                                        </div>
+                                        <div class="model-metric">
+                                            <span class="metric-label">胜率</span>
+                                            <span class="metric-value">62%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="model-card" data-model="rsi- Rev" onclick="selectModel(this)">
+                                    <div class="model-card-header">
+                                        <span class="model-name">RSI Rev</span>
+                                        <span class="model-badge beta">Beta</span>
+                                    </div>
+                                    <div class="model-desc">RSI 超卖反转</div>
+                                    <div class="model-metrics">
+                                        <div class="model-metric">
+                                            <span class="metric-label">收益</span>
+                                            <span class="metric-value green">15.2%</span>
+                                        </div>
+                                        <div class="model-metric">
+                                            <span class="metric-label">胜率</span>
+                                            <span class="metric-value">58%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="model-card" data-model="macd-momentum" onclick="selectModel(this)">
+                                    <div class="model-card-header">
+                                        <span class="model-name">MACD Mom</span>
+                                        <span class="model-badge gamma">Gamma</span>
+                                    </div>
+                                    <div class="model-desc">MACD 动量策略</div>
+                                    <div class="model-metrics">
+                                        <div class="model-metric">
+                                            <span class="metric-label">收益</span>
+                                            <span class="metric-value green">21.3%</span>
+                                        </div>
+                                        <div class="model-metric">
+                                            <span class="metric-label">胜率</span>
+                                            <span class="metric-value">65%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="model-card" data-model="bollinger-band" onclick="selectModel(this)">
+                                    <div class="model-card-header">
+                                        <span class="model-name">Bollinger</span>
+                                        <span class="model-badge alpha">Alpha</span>
+                                    </div>
+                                    <div class="model-desc">布林带突破策略</div>
+                                    <div class="model-metrics">
+                                        <div class="model-metric">
+                                            <span class="metric-label">收益</span>
+                                            <span class="metric-value green">16.8%</span>
+                                        </div>
+                                        <div class="model-metric">
+                                            <span class="metric-label">胜率</span>
+                                            <span class="metric-value">60%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                </svg>
+                                策略参数
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">短期均线周期</label>
+                                <input type="number" class="param-input" id="shortPeriod" value="5" min="1" max="50">
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">长期均线周期</label>
+                                <input type="number" class="param-input" id="longPeriod" value="20" min="5" max="200">
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">持仓天数</label>
+                                <input type="number" class="param-input" id="holdDays" value="5" min="1" max="30">
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
+                                </svg>
+                                风险控制
+                            </div>
+
+                            <div class="config-row">
+                                <span class="config-label">止损比例</span>
+                                <span class="config-value" id="stopLossValue">-5.0%</span>
+                            </div>
+                            <div class="range-slider">
+                                <div class="range-track" id="stopLossTrack">
+                                    <div class="range-fill" style="width: 25%;"></div>
+                                    <div class="range-thumb" style="left: 25%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="config-row" style="margin-top: 16px;">
+                                <span class="config-label">止盈比例</span>
+                                <span class="config-value" id="takeProfitValue">+10.0%</span>
+                            </div>
+                            <div class="range-slider">
+                                <div class="range-track" id="takeProfitTrack">
+                                    <div class="range-fill" style="width: 50%;"></div>
+                                    <div class="range-thumb" style="left: 50%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="config-row" style="margin-top: 16px;">
+                                <span class="config-label">最大持仓</span>
+                                <span class="config-value" id="maxPositionValue">30%</span>
+                            </div>
+                            <div class="range-slider">
+                                <div class="range-track" id="maxPositionTrack">
+                                    <div class="range-fill" style="width: 30%;"></div>
+                                    <div class="range-thumb" style="left: 30%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="runBacktest()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                运行回测
+                            </button>
+                            <button class="btn btn-success" onclick="saveConfig()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                                保存配置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trading Signals -->
+            <div class="card fade-in stagger-3" id="signalsCard">
+                <div class="card-header">
+                    <h2 class="card-title">交易信号</h2>
+                    <span style="font-size: 12px; color: var(--text-muted);">最新信号</span>
+                </div>
+                <div class="card-body">
+                    <div class="signal-list" id="signalList">
+                        <!-- Signals will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="card fade-in stagger-4" id="perfCard">
+                <div class="card-header">
+                    <h2 class="card-title">策略表现</h2>
+                </div>
+                <div class="card-body">
+                    <div class="perf-grid">
+                        <div class="perf-item">
+                            <div class="perf-value green" id="totalReturn">+18.5%</div>
+                            <div class="perf-label">累计收益率</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-value green" id="annualReturn">+24.3%</div>
+                            <div class="perf-label">年化收益率</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-value" id="winRate">62%</div>
+                            <div class="perf-label">胜率</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-value" id="profitLoss">1.85</div>
+                            <div class="perf-label">盈亏比</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-value" id="sharpeRatio">1.82</div>
+                            <div class="perf-label">夏普比率</div>
+                        </div>
+                        <div class="perf-item">
+                            <div class="perf-value red" id="maxDrawdown">-8.3%</div>
+                            <div class="perf-label">最大回撤</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Details -->
+            <div class="card fade-in stagger-4" id="txCard">
+                <div class="card-header">
+                    <h2 class="card-title">交易明细</h2>
+                    <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 笔</span>
+                </div>
+                <div class="card-body">
+                    <div class="tx-summary">
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value green" id="txTotalProfit">+12,580</div>
+                            <div class="tx-summary-label">累计盈亏</div>
+                        </div>
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value" id="txWinRate">62%</div>
+                            <div class="tx-summary-label">胜率</div>
+                        </div>
+                        <div class="tx-summary-item">
+                            <div class="tx-summary-value" id="txTotalCount">18</div>
+                            <div class="tx-summary-label">总交易</div>
+                        </div>
+                    </div>
+
+                    <div class="tx-tabs">
+                        <button class="tx-tab active" onclick="switchTxTab('all')">全部</button>
+                        <button class="tx-tab" onclick="switchTxTab('buy')">买入</button>
+                        <button class="tx-tab" onclick="switchTxTab('sell')">卖出</button>
+                    </div>
+
+                    <div class="tx-list" id="txList">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+        <span class="toast-message" id="toastMessage">操作成功</span>
+    </div>
+
+    <!-- K-Line Modal -->
+    <div class="modal-overlay kline-modal" id="klineModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">个股详情</h3>
+                <button class="modal-close" onclick="closeKlineModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="kline-header">
+                    <div class="kline-stock-info">
+                        <span class="kline-stock-name" id="klineStockName">贵州茅台</span>
+                        <span class="kline-stock-code" id="klineStockCode">600519</span>
+                    </div>
+                    <div class="kline-price-info">
+                        <span class="kline-current-price" id="klinePrice">1688.00</span>
+                        <span class="kline-price-change up" id="klineChange">+2.35 (+0.14%)</span>
+                    </div>
+                </div>
+
+                <div class="kline-chart-tabs">
+                    <button class="kline-tab active" onclick="switchKlinePeriod('day')">日K</button>
+                    <button class="kline-tab" onclick="switchKlinePeriod('week')">周K</button>
+                    <button class="kline-tab" onclick="switchKlinePeriod('month')">月K</button>
+                </div>
+
+                <div class="kline-indicators">
+                    <button class="kline-indicator active" onclick="toggleKlineIndicator('ma')">MA均线</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('volume')">成交量</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('macd')">MACD</button>
+                    <button class="kline-indicator" onclick="toggleKlineIndicator('kdj')">KDJ</button>
+                </div>
+
+                <div class="kline-chart-container">
+                    <canvas id="klineChart"></canvas>
+                </div>
+
+                <div class="kline-info-grid">
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">开盘</div>
+                        <div class="kline-info-value" id="klineOpen">1685.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">最高</div>
+                        <div class="kline-info-value" id="klineHigh">1695.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">最低</div>
+                        <div class="kline-info-value" id="klineLow">1680.00</div>
+                    </div>
+                    <div class="kline-info-item">
+                        <div class="kline-info-label">成交量</div>
+                        <div class="kline-info-value" id="klineVolume">12.5万</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Stock Data
+        let stocks = [
+            { code: '600519', name: '贵州茅台', market: 'sh', price: 1688.00, change: 2.35, changePercent: 0.14 },
+            { code: '000858', name: '五粮液', market: 'sz', price: 145.60, change: -2.30, changePercent: -1.56 },
+            { code: '600036', name: '招商银行', market: 'sh', price: 35.78, change: 0.45, changePercent: 1.27 },
+            { code: '000001', name: '平安银行', market: 'sz', price: 11.23, change: -0.18, changePercent: -1.58 },
+            { code: '601318', name: '中国平安', market: 'sh', price: 48.56, change: 0.89, changePercent: 1.87 },
+            { code: '600276', name: '恒瑞医药', market: 'sh', price: 52.34, change: 1.23, changePercent: 2.41 },
+            { code: '000333', name: '美的集团', market: 'sz', price: 58.90, change: -0.67, changePercent: -1.12 },
+            { code: '600887', name: '伊利股份', market: 'sh', price: 26.78, change: 0.34, changePercent: 1.29 },
+            { code: '002475', name: '立讯精密', market: 'sz', price: 28.45, change: 0.56, changePercent: 2.01 },
+            { code: '600030', name: '中信证券', market: 'sh', price: 21.34, change: -0.23, changePercent: -1.07 },
+            { code: '000725', name: '京东方A', market: 'sz', price: 3.78, change: 0.12, changePercent: 3.28 },
+            { code: '601888', name: '中国中免', market: 'sh', price: 72.56, change: 1.45, changePercent: 2.04 },
+            { code: '002594', name: '比亚迪', market: 'sz', price: 268.90, change: -3.45, changePercent: -1.27 },
+            { code: '600009', name: '上海机场', market: 'sh', price: 58.12, change: 0.89, changePercent: 1.56 },
+            { code: '000002', name: '万科A', market: 'sz', price: 8.45, change: -0.15, changePercent: -1.74 },
+        ];
+
+        let filteredStocks = [...stocks];
+        let selectedModel = 'ma-cross';
+        let priceChart = null;
+        let backtestChart = null;
+
+        // Watchlist Data
+        let watchlist = [];
+        let watchlistResults = {};
+
+        // K-Line Data
+        let klineChart = null;
+        let currentKlineStock = null;
+        let currentKlinePeriod = 'day';
+        let klineIndicators = { ma: true, volume: false, macd: false, kdj: false };
+
+        // Transaction Data
+        let transactions = [
+            { id: 1, type: 'buy', code: '600519', name: '贵州茅台', price: 1650.00, quantity: 100, amount: 165000, fee: 8.25, time: '2026-06-20 09:35:22', status: 'completed', profit: null },
+            { id: 2, type: 'sell', code: '000858', name: '五粮液', price: 148.50, quantity: 500, amount: 74250, fee: 7.43, time: '2026-06-20 10:15:08', status: 'completed', profit: 2850.00 },
+            { id: 3, type: 'buy', code: '600036', name: '招商银行', price: 34.20, quantity: 2000, amount: 68400, fee: 6.84, time: '2026-06-20 11:02:45', status: 'completed', profit: null },
+            { id: 4, type: 'buy', code: '600276', name: '恒瑞医药', price: 50.80, quantity: 300, amount: 15240, fee: 5.00, time: '2026-06-21 09:45:30', status: 'completed', profit: null },
+            { id: 5, type: 'sell', code: '000333', name: '美的集团', price: 60.50, quantity: 200, amount: 12100, fee: 5.00, time: '2026-06-21 10:28:12', status: 'completed', profit: -1280.50 },
+            { id: 6, type: 'buy', code: '002594', name: '比亚迪', price: 265.00, quantity: 50, amount: 13250, fee: 6.63, time: '2026-06-21 13:45:00', status: 'completed', profit: null },
+            { id: 7, type: 'sell', code: '600519', name: '贵州茅台', price: 1695.00, quantity: 100, amount: 169500, fee: 16.95, time: '2026-06-22 09:58:15', status: 'completed', profit: 4474.80 },
+            { id: 8, type: 'buy', code: '600887', name: '伊利股份', price: 25.50, quantity: 1000, amount: 25500, fee: 5.10, time: '2026-06-22 10:30:00', status: 'completed', profit: null },
+            { id: 9, type: 'buy', code: '000725', name: '京东方A', price: 3.65, quantity: 5000, amount: 18250, fee: 5.00, time: '2026-06-23 09:42:33', status: 'completed', profit: null },
+            { id: 10, type: 'sell', code: '600276', name: '恒瑞医药', price: 53.20, quantity: 300, amount: 15960, fee: 5.00, time: '2026-06-23 10:55:48', status: 'completed', profit: 705.00 },
+            { id: 11, type: 'buy', code: '601888', name: '中国中免', price: 70.00, quantity: 200, amount: 14000, fee: 7.00, time: '2026-06-24 09:38:20', status: 'completed', profit: null },
+            { id: 12, type: 'sell', code: '600887', name: '伊利股份', price: 27.10, quantity: 1000, amount: 27100, fee: 5.42, time: '2026-06-24 11:20:05', status: 'completed', profit: 1589.48 },
+            { id: 13, type: 'buy', code: '600030', name: '中信证券', price: 20.80, quantity: 1000, amount: 20800, fee: 6.24, time: '2026-06-25 09:50:10', status: 'completed', profit: null },
+            { id: 14, type: 'sell', code: '002594', name: '比亚迪', price: 272.50, quantity: 50, amount: 13625, fee: 6.81, time: '2026-06-25 10:45:30', status: 'completed', profit: 361.56 },
+            { id: 15, type: 'buy', code: '600009', name: '上海机场', price: 56.50, quantity: 300, amount: 16950, fee: 5.00, time: '2026-06-26 09:30:00', status: 'completed', profit: null },
+            { id: 16, type: 'sell', code: '000725', name: '京东方A', price: 3.78, quantity: 5000, amount: 18900, fee: 5.00, time: '2026-06-26 10:18:42', status: 'completed', profit: 640.00 },
+            { id: 17, type: 'buy', code: '000001', name: '平安银行', price: 11.00, quantity: 2000, amount: 22000, fee: 5.00, time: '2026-06-27 09:55:20', status: 'completed', profit: null },
+            { id: 18, type: 'sell', code: '600036', name: '招商银行', price: 35.80, quantity: 2000, amount: 71600, fee: 10.74, time: '2026-06-27 10:35:15', status: 'completed', profit: 3172.42 },
+        ];
+
+        let currentTxTab = 'all';
+
+        // Trading Signals
+        let signals = [
+            { type: 'buy', stock: '贵州茅台', code: '600519', reason: 'MA5上穿MA20，形成金叉', time: '09:35:22' },
+            { type: 'sell', stock: '五粮液', code: '000858', reason: 'RSI超买，触及止盈位', time: '09:42:15' },
+            { type: 'buy', stock: '招商银行', code: '600036', reason: '布林带下轨支撑，MACD底背离', time: '10:15:08' },
+            { type: 'buy', stock: '恒瑞医药', code: '600276', reason: '成交量放大，突破盘整区间', time: '10:28:34' },
+            { type: 'sell', stock: '美的集团', code: '000333', reason: '趋势破位，触发止损', time: '11:05:12' },
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderStockList();
+            renderSignals();
+            initPriceChart();
+            initBacktestChart();
+            initRangeSliders();
+            checkMarketStatus();
+            loadWatchlistFromStorage();
+            renderWatchlist();
+            renderTransactions();
+        });
+
+        // Render Stock List
+        function renderStockList() {
+            const stockList = document.getElementById('stockList');
+            stockList.innerHTML = filteredStocks.map(stock => {
+                const isInWatchlist = watchlist.some(w => w.code === stock.code);
+                return `
+                <div class="stock-item" onclick="selectStock('${stock.code}')">
+                    <div class="stock-info">
+                        <span class="stock-code">${stock.code}</span>
+                        <span class="stock-name">${stock.name}</span>
+                    </div>
+                    <div class="stock-price">${stock.price.toFixed(2)}</div>
+                    <div class="stock-change ${stock.change >= 0 ? 'up' : 'down'}">
+                        ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}
+                        (${stock.change >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%)
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 11px; color: var(--text-muted);">${stock.market === 'sh' ? '上海' : '深圳'}</span>
+                    </div>
+                    <button class="watchlist-btn ${isInWatchlist ? 'active' : ''}" onclick="event.stopPropagation(); toggleWatchlist('${stock.code}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
+                </div>
+            `}).join('');
+        }
+
+        // Filter Stocks
+        function filterStocks() {
+            const searchTerm = document.getElementById('stockSearch').value.toLowerCase();
+            const marketFilter = document.getElementById('marketFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            filteredStocks = stocks.filter(stock => {
+                const matchSearch = stock.code.toLowerCase().includes(searchTerm) ||
+                                   stock.name.toLowerCase().includes(searchTerm);
+                const matchMarket = marketFilter === 'all' || stock.market === marketFilter;
+                return matchSearch && matchMarket;
+            });
+
+            if (sortFilter === 'change') {
+                filteredStocks.sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
+            } else if (sortFilter === 'price') {
+                filteredStocks.sort((a, b) => b.price - a.price);
+            } else {
+                filteredStocks.sort((a, b) => a.code.localeCompare(b.code));
+            }
+
+            renderStockList();
+        }
+
+        // Render Signals
+        function renderSignals() {
+            const signalList = document.getElementById('signalList');
+            signalList.innerHTML = signals.map(signal => `
+                <div class="signal-item">
+                    <div class="signal-icon ${signal.type}">
+                        ${signal.type === 'buy' ? '↑' : '↓'}
+                    </div>
+                    <div class="signal-info">
+                        <div class="signal-stock">${signal.stock} (${signal.code})</div>
+                        <div class="signal-reason">${signal.reason}</div>
+                    </div>
+                    <div class="signal-time">${signal.time}</div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle Watchlist
+        function toggleWatchlist(code) {
+            const stock = stocks.find(s => s.code === code);
+            if (!stock) return;
+
+            const index = watchlist.findIndex(w => w.code === code);
+            if (index > -1) {
+                watchlist.splice(index, 1);
+                showToast(`已从自选股移除 ${stock.name}`, 'success');
+            } else {
+                watchlist.push({ ...stock, model: 'ma-cross' });
+                showToast(`已添加 ${stock.name} 到自选股`, 'success');
+            }
+
+            saveWatchlistToStorage();
+            renderStockList();
+            renderWatchlist();
+        }
+
+        // Render Watchlist
+        function renderWatchlist() {
+            const watchlistContainer = document.getElementById('watchlistContainer');
+            const watchlistCount = document.getElementById('watchlistCount');
+
+            // Update count
+            if (watchlistCount) {
+                watchlistCount.textContent = `${watchlist.length} 只`;
+            }
+
+            if (watchlist.length === 0) {
+                watchlistContainer.innerHTML = `
+                    <div class="watchlist-empty">
+                        <p>暂无自选股</p>
+                        <p style="margin-top: 8px; font-size: 12px;">点击股票旁边的星号添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            watchlistContainer.innerHTML = watchlist.map(item => {
+                const result = watchlistResults[item.code];
+                return `
+                <div class="watchlist-item">
+                    <div class="stock-info">
+                        <span class="stock-code">${item.code}</span>
+                        <span class="stock-name">${item.name}</span>
+                    </div>
+                    <select class="watchlist-model-select" onchange="updateWatchlistModel('${item.code}', this.value)">
+                        <option value="ma-cross" ${item.model === 'ma-cross' ? 'selected' : ''}>MA Cross</option>
+                        <option value="rsi-rev" ${item.model === 'rsi-rev' ? 'selected' : ''}>RSI Rev</option>
+                        <option value="macd-momentum" ${item.model === 'macd-momentum' ? 'selected' : ''}>MACD Mom</option>
+                        <option value="bollinger-band" ${item.model === 'bollinger-band' ? 'selected' : ''}>Bollinger</option>
+                    </select>
+                    <div class="watchlist-actions">
+                        <button class="watchlist-action-btn run" onclick="runWatchlistAnalysis('${item.code}')">分析</button>
+                        <button class="watchlist-action-btn remove" onclick="toggleWatchlist('${item.code}')">移除</button>
+                    </div>
+                </div>
+                ${result ? `
+                <div class="watchlist-results show" id="result-${item.code}">
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">策略</span>
+                        <span class="watchlist-result-value">${getModelName(result.model)}</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">预期收益</span>
+                        <span class="watchlist-result-value ${result.return >= 0 ? 'positive' : 'negative'}">${result.return >= 0 ? '+' : ''}${result.return.toFixed(1)}%</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">买入信号</span>
+                        <span class="watchlist-result-value ${result.signal === '买入' ? 'positive' : 'negative'}">${result.signal}</span>
+                    </div>
+                    <div class="watchlist-result-item">
+                        <span class="watchlist-result-label">风险等级</span>
+                        <span class="watchlist-result-value">${result.risk}</span>
+                    </div>
+                </div>
+                ` : ''}
+            `}).join('');
+        }
+
+        // Get Model Name
+        function getModelName(modelCode) {
+            const names = {
+                'ma-cross': 'MA Cross',
+                'rsi-rev': 'RSI Rev',
+                'macd-momentum': 'MACD Mom',
+                'bollinger-band': 'Bollinger'
+            };
+            return names[modelCode] || modelCode;
+        }
+
+        // Update Watchlist Model
+        function updateWatchlistModel(code, model) {
+            const item = watchlist.find(w => w.code === code);
+            if (item) {
+                item.model = model;
+                delete watchlistResults[code];
+                renderWatchlist();
+                saveWatchlistToStorage();
+            }
+        }
+
+        // Run Watchlist Analysis
+        function runWatchlistAnalysis(code) {
+            const item = watchlist.find(w => w.code === code);
+            if (!item) return;
+
+            showToast(`正在分析 ${item.name}...`, 'success');
+
+            // Simulate analysis
+            setTimeout(() => {
+                const modelReturns = {
+                    'ma-cross': 5 + Math.random() * 15,
+                    'rsi-rev': 3 + Math.random() * 12,
+                    'macd-momentum': 8 + Math.random() * 18,
+                    'bollinger-band': 4 + Math.random() * 14
+                };
+
+                const risks = ['低', '中', '高'];
+                const signals = ['买入', '持有', '卖出'];
+
+                watchlistResults[code] = {
+                    model: item.model,
+                    return: modelReturns[item.model],
+                    signal: signals[Math.floor(Math.random() * 3)],
+                    risk: risks[Math.floor(Math.random() * 3)]
+                };
+
+                renderWatchlist();
+                showToast(`${item.name} 分析完成`, 'success');
+            }, 1500);
+        }
+
+        // Save Watchlist to Storage
+        function saveWatchlistToStorage() {
+            localStorage.setItem('quantWatchlist', JSON.stringify(watchlist));
+        }
+
+        // Load Watchlist from Storage
+        function loadWatchlistFromStorage() {
+            const saved = localStorage.getItem('quantWatchlist');
+            if (saved) {
+                try {
+                    watchlist = JSON.parse(saved);
+                    renderWatchlist();
+                } catch (e) {
+                    console.error('Failed to load watchlist:', e);
+                }
+            }
+        }
+
+        // Render Transaction List
+        function renderTransactions() {
+            const txList = document.getElementById('txList');
+            const txCount = document.getElementById('txCount');
+
+            let filtered = transactions;
+            if (currentTxTab === 'buy') {
+                filtered = transactions.filter(t => t.type === 'buy');
+            } else if (currentTxTab === 'sell') {
+                filtered = transactions.filter(t => t.type === 'sell');
+            }
+
+            txCount.textContent = `${filtered.length} 笔`;
+            document.getElementById('txTotalCount').textContent = transactions.length;
+
+            // Calculate summary
+            const sellTxs = transactions.filter(t => t.type === 'sell');
+            const totalProfit = sellTxs.reduce((sum, t) => sum + (t.profit || 0), 0);
+            const winCount = sellTxs.filter(t => t.profit > 0).length;
+            const winRate = sellTxs.length > 0 ? (winCount / sellTxs.length * 100).toFixed(0) : 0;
+
+            const profitEl = document.getElementById('txTotalProfit');
+            profitEl.textContent = (totalProfit >= 0 ? '+' : '') + formatAmount(totalProfit);
+            profitEl.className = `tx-summary-value ${totalProfit >= 0 ? 'green' : 'red'}`;
+
+            document.getElementById('txWinRate').textContent = winRate + '%';
+
+            if (filtered.length === 0) {
+                txList.innerHTML = `<div class="tx-empty">暂无交易记录</div>`;
+                return;
+            }
+
+            txList.innerHTML = filtered.map(tx => `
+                <div class="tx-item ${tx.type}">
+                    <div class="tx-item-header">
+                        <div class="tx-item-stock">
+                            <span class="tx-type-badge ${tx.type}">${tx.type === 'buy' ? '买入' : '卖出'}</span>
+                            <div>
+                                <div class="tx-stock-name">${tx.name}</div>
+                                <div class="tx-stock-code">${tx.code}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="tx-status ${tx.status}">${tx.status === 'completed' ? '已成交' : '待成交'}</span>
+                            <div class="tx-time">${tx.time}</div>
+                        </div>
+                    </div>
+                    <div class="tx-item-details">
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">成交价</span>
+                            <span class="tx-detail-value">${tx.price.toFixed(2)}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">数量</span>
+                            <span class="tx-detail-value">${tx.quantity}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">金额</span>
+                            <span class="tx-detail-value">${formatAmount(tx.amount)}</span>
+                        </div>
+                        <div class="tx-detail-item">
+                            <span class="tx-detail-label">${tx.type === 'sell' ? '盈亏' : '手续费'}</span>
+                            <span class="tx-detail-value ${tx.type === 'sell' ? (tx.profit >= 0 ? 'green' : 'red') : ''}">
+                                ${tx.type === 'sell' ? (tx.profit >= 0 ? '+' : '') + formatAmount(tx.profit) : tx.fee.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatAmount(amount) {
+            return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Switch Transaction Tab
+        function switchTxTab(tab) {
+            currentTxTab = tab;
+
+            document.querySelectorAll('.tx-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderTransactions();
+        }
+
+        // Select Stock
+        function selectStock(code) {
+            const stock = stocks.find(s => s.code === code);
+            if (stock) {
+                openKlineModal(stock);
+            }
+        }
+
+        // Open K-Line Modal
+        function openKlineModal(stock) {
+            currentKlineStock = stock;
+
+            // Update header info
+            document.getElementById('klineStockName').textContent = stock.name;
+            document.getElementById('klineStockCode').textContent = stock.code;
+            document.getElementById('klinePrice').textContent = stock.price.toFixed(2);
+
+            const changeEl = document.getElementById('klineChange');
+            changeEl.textContent = `${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%)`;
+            changeEl.className = `kline-price-change ${stock.change >= 0 ? 'up' : 'down'}`;
+
+            // Generate random OHLCV data
+            const basePrice = stock.price;
+            const open = basePrice * (0.98 + Math.random() * 0.04);
+            const high = basePrice * (1.00 + Math.random() * 0.05);
+            const low = basePrice * (0.95 + Math.random() * 0.03);
+            const volume = (Math.random() * 100 + 10).toFixed(1);
+
+            document.getElementById('klineOpen').textContent = open.toFixed(2);
+            document.getElementById('klineHigh').textContent = high.toFixed(2);
+            document.getElementById('klineLow').textContent = low.toFixed(2);
+            document.getElementById('klineVolume').textContent = volume + '万';
+
+            // Initialize or update chart
+            initKlineChart(stock);
+
+            // Show modal
+            document.getElementById('klineModal').classList.add('show');
+        }
+
+        // Close K-Line Modal
+        function closeKlineModal() {
+            document.getElementById('klineModal').classList.remove('show');
+        }
+
+        // Switch K-Line Period
+        function switchKlinePeriod(period) {
+            currentKlinePeriod = period;
+
+            // Update tab styles
+            document.querySelectorAll('.kline-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Regenerate chart data
+            if (currentKlineStock) {
+                initKlineChart(currentKlineStock);
+            }
+        }
+
+        // Toggle K-Line Indicator
+        function toggleKlineIndicator(indicator) {
+            klineIndicators[indicator] = !klineIndicators[indicator];
+
+            // Update button styles
+            document.querySelectorAll('.kline-indicator').forEach(btn => {
+                if (btn.textContent.includes(indicator === 'ma' ? 'MA' : indicator === 'volume' ? '成交量' : indicator === 'macd' ? 'MACD' : 'KDJ')) {
+                    btn.classList.toggle('active', klineIndicators[indicator]);
+                }
+            });
+
+            // Re-render chart
+            if (currentKlineStock) {
+                initKlineChart(currentKlineStock);
+            }
+        }
+
+        // Generate K-Line Data
+        function generateKlineData(stock, period) {
+            const data = [];
+            const days = period === 'day' ? 60 : period === 'week' ? 52 : 24;
+            const basePrice = stock.price;
+
+            let currentPrice = basePrice * 0.85;
+
+            for (let i = 0; i < days; i++) {
+                const volatility = 0.03 + Math.random() * 0.04;
+                const trend = Math.random() > 0.48 ? 1 : -1;
+
+                const open = currentPrice;
+                const change = currentPrice * volatility * trend;
+                const close = open + change;
+
+                const highExtra = Math.random() * 0.02 * currentPrice;
+                const lowExtra = Math.random() * 0.02 * currentPrice;
+
+                const high = Math.max(open, close) + highExtra;
+                const low = Math.min(open, close) - lowExtra;
+
+                const volume = 50 + Math.random() * 200;
+
+                data.push({
+                    date: i,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close,
+                    volume: volume
+                });
+
+                currentPrice = close;
+            }
+
+            return data;
+        }
+
+        // Initialize K-Line Chart
+        function initKlineChart(stock) {
+            const ctx = document.getElementById('klineChart').getContext('2d');
+            const klineData = generateKlineData(stock, currentKlinePeriod);
+
+            // Calculate MA
+            const ma5 = calculateMA(klineData, 5);
+            const ma10 = calculateMA(klineData, 10);
+            const ma20 = calculateMA(klineData, 20);
+
+            // Prepare labels
+            const labels = klineData.map((d, i) => {
+                if (currentKlinePeriod === 'day') return `${i}d`;
+                if (currentKlinePeriod === 'week') return `W${i + 1}`;
+                return `M${i + 1}`;
+            });
+
+            // Determine colors
+            const getColor = (i) => klineData[i].close >= klineData[i].open ? '#00d4a1' : '#ff4757';
+
+            // Create candlestick data (high-low line and body)
+            const candleData = klineData.map((d, i) => ({
+                x: i,
+                y: [d.low, d.high, d.open, d.close]
+            }));
+
+            // Destroy existing chart
+            if (klineChart) {
+                klineChart.destroy();
+            }
+
+            const datasets = [];
+
+            // Add candlestick-like bars
+            datasets.push({
+                label: '价格',
+                data: klineData.map(d => d.close),
+                backgroundColor: klineData.map((d, i) => d.close >= d.open ? 'rgba(0, 212, 161, 0.6)' : 'rgba(255, 71, 87, 0.6)'),
+                borderColor: klineData.map((d, i) => d.close >= d.open ? '#00d4a1' : '#ff4757'),
+                borderWidth: 1,
+                barPercentage: 0.7,
+            });
+
+            // Add MA lines if enabled
+            if (klineIndicators.ma) {
+                datasets.push({
+                    label: 'MA5',
+                    data: ma5,
+                    borderColor: '#ff6b6b',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+                datasets.push({
+                    label: 'MA10',
+                    data: ma10,
+                    borderColor: '#ffd93d',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+                datasets.push({
+                    label: 'MA20',
+                    data: ma20,
+                    borderColor: '#6c5ce7',
+                    borderWidth: 1.5,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                });
+            }
+
+            klineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: klineIndicators.ma,
+                            position: 'top',
+                            labels: {
+                                color: '#8b97a8',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a2332',
+                            borderColor: '#2d3a4f',
+                            borderWidth: 1,
+                            titleColor: '#e8edf5',
+                            bodyColor: '#8b97a8',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = klineData[idx];
+                                    return [
+                                        `开盘: ${d.open.toFixed(2)}`,
+                                        `最高: ${d.high.toFixed(2)}`,
+                                        `最低: ${d.low.toFixed(2)}`,
+                                        `收盘: ${d.close.toFixed(2)}`,
+                                        `成交量: ${d.volume.toFixed(1)}万`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778', maxTicksLimit: 10 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778' },
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calculate Moving Average
+        function calculateMA(data, period) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += data[i - j].close;
+                    }
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
+        }
+
+        // Initialize Price Chart
+        function initPriceChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            const labels = [];
+            const data = [];
+            const now = Date.now();
+            for (let i = 30; i >= 0; i--) {
+                labels.push(`${i}d ago`);
+                data.push(3000 + Math.random() * 50 - 25);
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '上证指数',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#3b82f6',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a2332',
+                            borderColor: '#2d3a4f',
+                            borderWidth: 1,
+                            titleColor: '#e8edf5',
+                            bodyColor: '#8b97a8',
+                            padding: 12,
+                            displayColors: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778', maxTicksLimit: 6 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { color: '#5c6778' },
+                            position: 'right'
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Update Price Chart
+        function updatePriceChart(stock) {
+            if (priceChart) {
+                priceChart.data.datasets[0].label = `${stock.name} (${stock.code})`;
+                const newData = [];
+                for (let i = 30; i >= 0; i--) {
+                    newData.push(stock.price * (0.95 + Math.random() * 0.1));
+                }
+                priceChart.data.datasets[0].data = newData;
+                priceChart.update();
+            }
+        }
+
+        // Set Chart Range
+        function setChartRange(range) {
+            document.querySelectorAll('.card-body .btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            event.target.classList.remove('btn-secondary');
+            event.target.classList.add('btn-primary');
+            showToast(`已切换至 ${range} 视图`, 'success');
+        }
+
+        // Initialize Backtest Chart
+        function initBacktestChart() {
+            const ctx = document.getElementById('backtestChart').getContext('2d');
+            const gradientGreen = ctx.createLinearGradient(0, 0, 0, 200);
+            gradientGreen.addColorStop(0, 'rgba(0, 212, 161, 0.4)');
+            gradientGreen.addColorStop(1, 'rgba(0, 212, 161, 0)');
+
+            const labels = ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周', '第7周', '第8周'];
+            const data = [100, 103, 102, 108, 112, 109, 118, 124.5];
+
+            backtestChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '策略收益',
+                        data: data,
+                        borderColor: '#00d4a1',
+                        backgroundColor: gradientGreen,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a2332',
+                            borderColor: '#2d3a4f',
+                            borderWidth: 1,
+                            titleColor: '#e8edf5',
+                            bodyColor: '#8b97a8',
+                            padding: 12,
+                            displayColors: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#5c6778' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(45, 58, 79, 0.5)', drawBorder: false },
+                            ticks: { 
+                                color: '#5c6778',
+                                callback: value => value + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Range Sliders
+        function initRangeSliders() {
+            initSlider('stopLossTrack', 'stopLossValue', '%', 0, 20, 5, val => `-${val.toFixed(1)}%`);
+            initSlider('takeProfitTrack', 'takeProfitValue', '%', 0, 30, 10, val => `+${val.toFixed(1)}%`);
+            initSlider('maxPositionTrack', 'maxPositionValue', '%', 0, 100, 30);
+        }
+
+        function initSlider(trackId, valueId, suffix, min, max, initial, formatter = v => `${v}%`) {
+            const track = document.getElementById(trackId);
+            const valueDisplay = document.getElementById(valueId);
+            const thumb = track.querySelector('.range-thumb');
+            const fill = track.querySelector('.range-fill');
+
+            let isDragging = false;
+
+            function updateSlider(e) {
+                const rect = track.getBoundingClientRect();
+                let percent = ((e.clientX || e.touches[0].clientX) - rect.left) / rect.width;
+                percent = Math.max(0, Math.min(1, percent));
+                const value = min + (max - min) * percent;
+
+                thumb.style.left = `${percent * 100}%`;
+                fill.style.width = `${percent * 100}%`;
+                valueDisplay.textContent = formatter(value);
+            }
+
+            track.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updateSlider(e);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) updateSlider(e);
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            track.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                updateSlider(e);
+            });
+
+            track.addEventListener('touchmove', (e) => {
+                if (isDragging) updateSlider(e);
+            });
+
+            track.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+
+        // Select Model
+        function selectModel(element) {
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            selectedModel = element.dataset.model;
+            showToast(`已选择策略: ${element.querySelector('.model-name').textContent}`, 'success');
+        }
+
+        // Sync Data
+        function syncData() {
+            const syncBtn = document.getElementById('syncBtn');
+            syncBtn.classList.add('syncing');
+
+            setTimeout(() => {
+                syncBtn.classList.remove('syncing');
+                showToast('数据同步完成', 'success');
+
+                // Update stock data with random changes
+                stocks = stocks.map(stock => {
+                    const change = (Math.random() - 0.5) * 5;
+                    const newPrice = stock.price + change;
+                    const changePercent = (change / stock.price) * 100;
+                    return {
+                        ...stock,
+                        price: parseFloat(newPrice.toFixed(2)),
+                        change: parseFloat(change.toFixed(2)),
+                        changePercent: parseFloat(changePercent.toFixed(2))
+                    };
+                });
+
+                filteredStocks = [...stocks];
+                renderStockList();
+            }, 2000);
+        }
+
+        // Run Backtest
+        function runBacktest() {
+            showToast('正在运行回测...', 'success');
+            setTimeout(() => {
+                document.getElementById('backtestPanel').style.display = 'block';
+                showToast('回测完成！累计收益 +24.5%', 'success');
+
+                // Update backtest stats
+                document.getElementById('backtestReturn').textContent = `+${(15 + Math.random() * 15).toFixed(1)}%`;
+                document.getElementById('backtestSharpe').textContent = (1.5 + Math.random()).toFixed(2);
+                document.getElementById('backtestMaxDD').textContent = `-${(5 + Math.random() * 8).toFixed(1)}%`;
+            }, 3000);
+        }
+
+        // Save Config
+        function saveConfig() {
+            const config = {
+                model: selectedModel,
+                shortPeriod: parseInt(document.getElementById('shortPeriod').value),
+                longPeriod: parseInt(document.getElementById('longPeriod').value),
+                holdDays: parseInt(document.getElementById('holdDays').value),
+                stopLoss: parseFloat(document.getElementById('stopLossValue').textContent),
+                takeProfit: parseFloat(document.getElementById('takeProfitValue').textContent),
+                maxPosition: parseFloat(document.getElementById('maxPositionValue').textContent)
+            };
+
+            console.log('Saving config:', config);
+            localStorage.setItem('quantConfig', JSON.stringify(config));
+            showToast('配置已保存', 'success');
+        }
+
+        // Check Market Status
+        function checkMarketStatus() {
+            const now = new Date();
+            const hour = now.getHours();
+            const day = now.getDay();
+
+            const isWeekend = day === 0 || day === 6;
+            const isTradingTime = (hour >= 9 && hour < 12) || (hour >= 13 && hour < 15);
+
+            const statusDot = document.getElementById('marketStatusDot');
+            const statusText = document.getElementById('marketStatusText');
+
+            if (isWeekend) {
+                statusDot.classList.add('closed');
+                statusText.textContent = '休市';
+            } else if (isTradingTime) {
+                statusText.textContent = '交易中';
+            } else {
+                statusDot.classList.add('closed');
+                statusText.textContent = '已休市';
+            }
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const panel = this.dataset.panel;
+
+                document.getElementById('stocksPanel').style.display = panel === 'stocks' || panel === 'dashboard' ? 'block' : 'none';
+                document.getElementById('modelsPanel').style.display = panel === 'models' ? 'block' : 'none';
+                document.getElementById('backtestPanel').style.display = panel === 'backtest' ? 'block' : 'none';
+                document.getElementById('signalsCard').style.display = panel === 'dashboard' || panel === 'stocks' ? 'block' : 'none';
+                document.getElementById('perfCard').style.display = panel === 'dashboard' || panel === 'backtest' ? 'block' : 'none';
+            });
+        });
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Custom Select
+        document.querySelectorAll('.select-trigger').forEach(trigger => {
+            trigger.addEventListener('click', function() {
+                const options = this.nextElementSibling;
+                document.querySelectorAll('.select-options').forEach(opt => {
+                    if (opt !== options) opt.classList.remove('open');
+                });
+                document.querySelectorAll('.select-trigger').forEach(t => {
+                    if (t !== this) t.classList.remove('open');
+                });
+                this.classList.toggle('open');
+                options.classList.toggle('open');
+            });
+        });
+
+        document.querySelectorAll('.select-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const select = this.closest('.custom-select');
+                select.querySelector('.select-trigger span').textContent = this.textContent;
+                select.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                this.closest('.select-options').classList.remove('open');
+                select.querySelector('.select-trigger').classList.remove('open');
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.select-options').forEach(opt => opt.classList.remove('open'));
+                document.querySelectorAll('.select-trigger').forEach(t => t.classList.remove('open'));
+            }
+        });
+
+        // Close K-Line modal when clicking outside
+        document.getElementById('klineModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeKlineModal();
+            }
+        });
+    </script>
+</body>
+</html>
